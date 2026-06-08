@@ -307,21 +307,77 @@ PROJECT_VERSION=1.0.0
 
 Replace your_password with your PostgreSQL password.
 
-Run the Project
+## Run the Backend
+
+From the project root folder, run:
+
+```bash
 uvicorn app.main:app --reload
+```
 
-The API will run at:
+The backend API will run at:
 
+```text
 http://127.0.0.1:8000
-API Documentation
+```
 
 Swagger UI:
 
+```text
 http://127.0.0.1:8000/docs
+```
 
 ReDoc:
 
+```text
 http://127.0.0.1:8000/redoc
+```
+
+---
+
+## Run the Frontend
+
+Open a second terminal and move into the frontend folder:
+
+```bash
+cd frontend
+```
+
+Install frontend dependencies:
+
+```bash
+npm install
+```
+
+Start the React development server:
+
+```bash
+npm run dev
+```
+
+The frontend dashboard will run at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## Running Full Project
+
+To run the full system:
+
+```text
+Terminal 1 → Backend
+uvicorn app.main:app --reload
+
+Terminal 2 → Frontend
+cd frontend
+npm run dev
+```
+
+The backend must be running before logging into the frontend.
+
 Testing Workflow
 
 Recommended testing order:
