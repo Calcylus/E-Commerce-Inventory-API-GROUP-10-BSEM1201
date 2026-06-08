@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 from app import models
@@ -14,8 +15,22 @@ app = FastAPI(
     version="1.0.0",
     description=(
         "A production-ready FastAPI project for managing users, "
-        "categories, products, inventory, and customer orders."
+        "categories, products, inventory, customer orders, "
+        "stock recommendations, order risk detection, and sales analytics."
     )
+)
+
+
+# Allow the React frontend to communicate with the FastAPI backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -33,5 +48,6 @@ async def root():
         "message": "Welcome to the E-Commerce Inventory API",
         "status": "running",
         "docs": "/docs",
-        "redoc": "/redoc"
+        "redoc": "/redoc",
+        "frontend": "http://localhost:5173"
     }

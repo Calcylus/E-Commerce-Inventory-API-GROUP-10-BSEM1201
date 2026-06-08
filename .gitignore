@@ -17,6 +17,15 @@ __pycache__/
 *.db
 *.sqlite3
 
+# SQLTools session files
+*.session.sql
+
+# Frontend dependencies
+frontend/node_modules/
+
+# Frontend build
+frontend/dist/
+
 # OS files
 .DS_Store
 Thumbs.db
