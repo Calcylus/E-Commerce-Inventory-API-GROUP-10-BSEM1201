@@ -42,7 +42,8 @@ async def create_category(
 
     new_category = models.Category(
         name=category.name,
-        description=category.description
+        description=category.description,
+        icon=category.icon
     )
 
     db.add(new_category)
@@ -139,6 +140,9 @@ async def update_category(
 
     if category_update.description is not None:
         category.description = category_update.description
+
+    if category_update.icon is not None:
+        category.icon = category_update.icon
 
     db.commit()
     db.refresh(category)

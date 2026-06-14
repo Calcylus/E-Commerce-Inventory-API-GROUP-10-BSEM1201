@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from app import models, schemas
 from app.auth import get_current_admin
@@ -13,6 +14,15 @@ router = APIRouter(
     prefix="/products",
     tags=["Products"]
 )
+
+
+def add_rating(product):
+    """Attach average_rating to a product object."""
+    if product.reviews:
+        product.average_rating = round(sum(r.rating for r in product.reviews) / len(product.reviews), 1)
+    else:
+        product.average_rating = None
+    return product
 
 
 @router.post(
@@ -46,7 +56,8 @@ async def create_product(
         description=product.description,
         price=product.price,
         stock_quantity=product.stock_quantity,
-        category_id=product.category_id
+        category_id=product.category_id,
+        image_url=product.image_url
     )
 
     db.add(new_product)
@@ -61,17 +72,19 @@ async def create_product(
     response_model=List[schemas.ProductResponse]
 )
 async def get_all_products(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db)
 ):
     """
-    Get all products.
+    Get all products with pagination.
 
     This endpoint is public.
     """
 
-    products = db.query(models.Product).all()
+    products = db.query(models.Product).offset(skip).limit(limit).all()
 
-    return products
+    return [add_rating(p) for p in products]
 
 
 @router.get(
@@ -87,6 +100,8 @@ async def search_products(
         None,
         description="Use: in_stock, low_stock, or out_of_stock"
     ),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db)
 ):
     """
@@ -141,9 +156,9 @@ async def search_products(
                 detail="stock_status must be in_stock, low_stock, or out_of_stock"
             )
 
-    products = query.all()
+    products = query.offset(skip).limit(limit).all()
 
-    return products
+    return [add_rating(p) for p in products]
 
 
 @router.get(
@@ -292,7 +307,7 @@ async def get_product_by_id(
             detail="Product not found"
         )
 
-    return product
+    return add_rating(product)
 
 
 @router.put(
@@ -346,10 +361,51 @@ async def update_product(
     if product_update.stock_quantity is not None:
         product.stock_quantity = product_update.stock_quantity
 
+    if product_update.image_url is not None:
+        product.image_url = product_update.image_url
+
     db.commit()
     db.refresh(product)
 
-    return product
+    return add_rating(product)
+
+
+@router.post(
+    "/bulk-stock-update",
+    status_code=status.HTTP_200_OK
+)
+async def bulk_stock_update(
+    data: schemas.BulkStockUpdate,
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(get_current_admin)
+):
+    """
+    Bulk update stock quantities for multiple products at once.
+
+    Only admin users can use this endpoint.
+    """
+
+    updated = []
+    for item in data.items:
+        product = db.query(models.Product).filter(
+            models.Product.id == item.product_id
+        ).first()
+
+        if not product:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Product with ID {item.product_id} not found."
+            )
+
+        product.stock_quantity = item.stock_quantity
+        updated.append(product)
+
+    db.commit()
+
+    return {
+        "message": f"Stock updated for {len(updated)} product(s).",
+        "updated_count": len(updated)
+    }
 
 
 @router.delete(

@@ -1,0 +1,92 @@
+You are an expert full-stack developer working on a complete E-Commerce Inventory API with a vanilla frontend. Read this entire document before making any changes.
+
+## Project Overview
+A full-featured e-commerce backend (FastAPI + PostgreSQL) with a vanilla HTML/CSS/JS SPA frontend served as static files from the backend at root `/`. All API routes are under `/api/`.
+
+## Tech Stack
+- **Backend**: Python FastAPI, SQLAlchemy, PostgreSQL
+- **Frontend**: Vanilla HTML/CSS/JS (NO frameworks, NO build step, NO Vite, NO npm)
+- **Auth**: JWT tokens stored in localStorage
+- **DB**: PostgreSQL at `postgresql://postgres:Calculator@localhost:5432/ecommerce_inventory_db`
+
+## Project Structure
+```
+E-Commerce Inventory-api/
+├── app/                    # FastAPI backend
+│   ├── main.py             # App entry point, CORS, static file mount
+│   ├── database.py         # DB engine with NullPool + pool_pre_ping
+│   ├── models.py           # SQLAlchemy models
+│   ├── schemas.py          # Pydantic schemas
+│   ├── auth.py             # JWT auth logic
+│   └── routers/            # API route modules
+├── frontend/               # Vanilla SPA (served from FastAPI at /)
+│   ├── index.html          # Full SPA with all pages/sections
+│   ├── app.js              # All frontend logic (auth, cart, admin, etc.)
+│   ├── styles.css          # Styling with dark mode CSS vars
+│   └── public/             # Static assets (favicon, icons)
+├── uploads/                # Uploaded images (local filesystem)
+├── venv/                   # Python virtual environment
+├── requirements.txt        # Python dependencies
+├── seed_admin.py           # Creates demo admin accounts
+├── seed_full.py            # Seeds 8 categories + 26 products with Unsplash images
+├── seed_sample_data.py     # Seeds base 4 categories + 10 products
+├── fix_images.py           # Updates product image URLs with matched Unsplash photos
+├── check_db.py             # DB diagnostic script
+├── .env                    # Environment variables
+└── .env.example            # Env template
+```
+
+## API Endpoints
+All under `/api` prefix:
+- `POST /api/auth/register` / `POST /api/auth/login` / `GET /api/auth/me`
+- `GET/POST/PUT/DELETE /api/categories`
+- `GET /api/products` + `POST/PUT/DELETE /api/products/{id}` + `POST /api/products/bulk-stock-update`
+- `GET /api/orders` + `POST /api/orders` + `PUT /api/orders/{id}/status`
+- `GET /api/reviews` + `POST /api/reviews`
+- `POST /api/upload/image`
+- `GET/POST /api/contact_messages` + `PUT /api/contact_messages/{id}/read`
+- `GET /api/admin/stats` + `GET /api/admin/users` + `DELETE /api/admin/users/{id}`
+
+## Frontend Pages & Features
+- **Home**: Hero section, category cards (with icons), featured products grid
+- **Shop**: Product grid with search, category/price/stock filters, pagination (12/page)
+- **Product Detail Modal**: Average rating stars, review list, review submission (auth only)
+- **Cart**: localStorage-persisted, stock validation on load, "Check Risk" + Place Order
+- **My Orders**: Filterable by status, payment_method, payment_status
+- **Profile**: Edit name/email, change password, dark mode toggle (persisted)
+- **Admin Dashboard**: Stats cards, inventory health bar, restock recommendations, sales summary
+- **Admin Products**: Table + add/edit modal (image URL + "Upload" button), bulk stock update panel
+- **Admin Categories**: Table + add/edit modal with icon field
+- **Admin Orders**: Table + status update + filtering by status/payment_method/payment_status
+- **Admin Users**: Table with delete
+- **Admin Messages**: View messages + mark as read
+- **Contact**: Info cards (Sierra Leone address, phone 090215788) + contact form
+
+## Demo Accounts
+- `admin` / `admin123` (admin role)
+- `Mustapha` / `mustapha2025` (admin role)
+- `Shaw` / any password (customer role)
+
+## Key Architectural Decisions
+- `NullPool` + `pool_pre_ping=True` in DB config to survive PostgreSQL restarts
+- `create_all` runs on app startup — new tables/columns auto-created
+- Cart in `localStorage`, validated against server stock on page load
+- Pagination: server uses `skip`+`limit`, shop frontend slices client-side (12/page)
+- Reviews in separate table with unique constraint per product+user
+- Image uploads stored at `uploads/`, served via `StaticFiles` mount
+- Unsplash direct URL format: `https://images.unsplash.com/photo-{ID}?w=500&h=500&fit=crop`
+- No wrapper object on paginated responses — returns items array directly
+
+## Running the Project
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+Opens at `http://localhost:8000/`
+
+## Important Notes
+- NEVER add build steps, npm packages, or frameworks to the frontend
+- All new frontend code goes in the existing `index.html`, `app.js`, or `styles.css`
+- Models are in `app/models.py`, routes in `app/routers/`, schemas in `app/schemas.py`
+- Use `seed_full.py` for a complete DB reset with all data
+- `fix_images.py` updates product image URLs by product name matches
+- Dark mode toggle is in Profile page, persisted in localStorage

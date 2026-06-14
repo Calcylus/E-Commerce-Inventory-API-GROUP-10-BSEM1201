@@ -1,13 +1,501 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopInventory — E-Commerce</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="container nav-container">
+      <a href="#" class="logo" onclick="navigate('home')">ShopInventory</a>
+      <div class="nav-links" id="navLinks">
+        <a href="#" onclick="navigate('home')">Home</a>
+        <a href="#" onclick="navigate('shop')">Shop</a>
+        <a href="#" onclick="navigate('contact')">Contact</a>
+        <a href="#" onclick="navigate('orders')" class="nav-auth-item" id="navOrders" style="display:none;">My Orders</a>
+        <a href="#" onclick="navigate('dashboard')" class="nav-auth-item" id="navDashboard" style="display:none;">Dashboard</a>
+      </div>
+      <div class="nav-auth">
+        <button class="btn btn-outline btn-sm" id="loginBtn" onclick="showLoginModal()" style="color:#F5F0E8;border-color:rgba(245,240,232,.3)">Sign In</button>
+        <button class="btn btn-primary btn-sm" onclick="showRegisterModal()">Register</button>
+        <div class="avatar-dropdown" id="avatarDropdown" style="display:none">
+          <div class="avatar-trigger" onclick="toggleDropdown()">
+            <span class="avatar-icon" id="avatarIcon">U</span>
+            <span class="avatar-name" id="avatarName">User</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="color:inherit"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="dropdown-menu" id="dropdownMenu">
+            <a href="#" onclick="navigate('profile'); closeDropdown()">Profile</a>
+            <a href="#" onclick="navigate('orders'); closeDropdown()">My Orders</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" onclick="navigate('dashboard')" id="ddAdmin" style="display:none;">Dashboard</a>
+            <a href="#" onclick="navigate('adminProducts')" id="ddProducts" style="display:none;">Manage Products</a>
+            <a href="#" onclick="navigate('adminCategories')" id="ddCategories" style="display:none;">Manage Categories</a>
+            <a href="#" onclick="navigate('adminOrders')" id="ddOrders" style="display:none;">All Orders</a>
+            <a href="#" onclick="navigate('adminUsers')" id="ddUsers" style="display:none;">Users</a>
+            <a href="#" onclick="navigate('adminMessages')" id="ddMessages" style="display:none;">Messages</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" onclick="logout()">Logout</a>
+          </div>
+        </div>
+      </div>
+      <button class="mobile-toggle" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- HOME -->
+    <section id="pageHome" class="page active">
+      <div class="hero">
+        <div class="container hero-content">
+          <h1>Gear up for less</h1>
+          <p>Quality electronics and accessories at honest prices, picked for everyday use.</p>
+          <button class="btn btn-primary btn-lg" onclick="navigate('shop')" style="margin-top:1rem;">Browse products</button>
+        </div>
+      </div>
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2>Shop by category</h2>
+            <a href="#" class="text-link" onclick="navigate('shop')">View all</a>
+          </div>
+          <div class="categories-grid" id="homeCategories"></div>
+        </div>
+      </section>
+      <section class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <h2>Featured products</h2>
+            <a href="#" class="text-link" onclick="navigate('shop')">View all</a>
+          </div>
+          <div class="product-grid" id="homeProducts"></div>
+        </div>
+      </section>
+    </section>
+
+    <!-- SHOP -->
+    <section id="pageShop" class="page">
+      <div class="page-header">
+        <div class="container">
+          <h1>Shop</h1>
+        </div>
+      </div>
+      <div class="container shop-layout">
+        <aside class="shop-filters">
+          <div class="filter-group">
+            <h3>Search</h3>
+            <input type="text" id="shopSearch" class="form-input" placeholder="Search products..." oninput="filterShop()">
+          </div>
+          <div class="filter-group">
+            <h3>Category</h3>
+            <select id="shopCategory" class="form-input" onchange="filterShop()">
+              <option value="">All Categories</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <h3>Price Range</h3>
+            <div class="filter-row">
+              <input type="number" id="shopMinPrice" class="form-input" placeholder="Min" oninput="filterShop()">
+              <span>to</span>
+              <input type="number" id="shopMaxPrice" class="form-input" placeholder="Max" oninput="filterShop()">
+            </div>
+          </div>
+          <div class="filter-group">
+            <h3>Stock Status</h3>
+            <select id="shopStock" class="form-input" onchange="filterShop()">
+              <option value="">All</option>
+              <option value="in_stock">In Stock</option>
+              <option value="low_stock">Low Stock</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+          </div>
+          <button class="btn btn-outline" style="width:100%;color:var(--text);border-color:var(--border)" onclick="resetShopFilters()">Reset Filters</button>
+        </aside>
+        <div class="shop-content">
+          <div class="shop-toolbar">
+            <span id="shopCount">0 products</span>
+          </div>
+          <div class="product-grid" id="shopProducts"></div>
+          <div id="shopPagination" style="text-align:center;margin-top:2rem;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="pageContact" class="page">
+      <div class="page-header">
+        <div class="container"><h1>Contact Us</h1></div>
+      </div>
+      <div class="container contact-layout">
+        <div class="contact-info">
+          <div class="info-card">
+            <h3><i class="ti ti-mail" style="margin-right:6px" aria-hidden="true"></i>Email</h3>
+            <p>support@shopinventory.com</p>
+          </div>
+          <div class="info-card">
+            <h3><i class="ti ti-phone" style="margin-right:6px" aria-hidden="true"></i>Phone</h3>
+            <p>090215788</p>
+          </div>
+          <div class="info-card">
+            <h3><i class="ti ti-map-pin" style="margin-right:6px" aria-hidden="true"></i>Address</h3>
+            <p>45 Wilkinson Road<br>Freetown, Sierra Leone</p>
+          </div>
+          <div class="info-card">
+            <h3><i class="ti ti-clock" style="margin-right:6px" aria-hidden="true"></i>Hours</h3>
+            <p>Mon–Fri: 9AM–6PM<br>Sat–Sun: 10AM–4PM</p>
+          </div>
+        </div>
+        <form class="contact-form" id="contactForm" onsubmit="submitContact(event)">
+          <h2>Send us a message</h2>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="form-input" name="name" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="form-input" name="email" required>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" class="form-input" name="subject" required>
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea class="form-input" name="message" rows="5" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">Send Message</button>
+          <div class="form-msg" id="contactMsg"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- MY ORDERS -->
+    <section id="pageOrders" class="page">
+      <div class="page-header">
+        <div class="container"><h1>My Orders</h1></div>
+      </div>
+      <div class="container">
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <select class="form-input" id="myOrderStatus" style="width:auto;padding:.6rem" onchange="loadMyOrders()">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select class="form-input" id="myOrderPayStatus" style="width:auto;padding:.6rem" onchange="loadMyOrders()">
+            <option value="">All Payment</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="refunded">Refunded</option>
+          </select>
+        </div>
+        <div id="ordersList"></div>
+        <div id="ordersEmpty" class="empty-state" style="display:none">
+          <p>You haven't placed any orders yet.</p>
+          <a href="#" class="btn btn-primary" onclick="navigate('shop'); return false;">Start Shopping</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN DASHBOARD -->
+    <section id="pageDashboard" class="page">
+      <div class="page-header">
+        <div class="container"><h1>Dashboard</h1></div>
+      </div>
+      <div class="container">
+        <div class="stats-grid" id="dashStats"></div>
+        <div class="dash-grid">
+          <div class="card">
+            <h3>Inventory Health</h3>
+            <div id="inventoryHealth"></div>
+          </div>
+          <div class="card">
+            <h3>Restock Recommendations</h3>
+            <div id="restockRecs"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:1.5rem">
+          <h3>Sales Summary</h3>
+          <div id="salesSummary"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN PRODUCTS -->
+    <section id="pageAdminProducts" class="page">
+      <div class="page-header">
+        <div class="container">
+          <h1>Products</h1>
+          <button class="btn btn-primary" onclick="showProductModal()"><i class="ti ti-plus" style="margin-right:4px" aria-hidden="true"></i>Add Product</button>
+        </div>
+      </div>
+      <div class="container">
+        <div class="table-wrapper" id="adminProductsTable"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN CATEGORIES -->
+    <section id="pageAdminCategories" class="page">
+      <div class="page-header">
+        <div class="container">
+          <h1>Categories</h1>
+          <button class="btn btn-primary" onclick="showCategoryModal()"><i class="ti ti-plus" style="margin-right:4px" aria-hidden="true"></i>Add Category</button>
+        </div>
+      </div>
+      <div class="container">
+        <div class="table-wrapper" id="adminCategoriesTable"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN ORDERS -->
+    <section id="pageAdminOrders" class="page">
+      <div class="page-header">
+        <div class="container"><h1>All Orders</h1></div>
+      </div>
+      <div class="container">
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <select class="form-input" id="adminOrderStatus" style="width:auto;padding:.6rem" onchange="loadAdminOrders()">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select class="form-input" id="adminOrderPayStatus" style="width:auto;padding:.6rem" onchange="loadAdminOrders()">
+            <option value="">All Payment Status</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="refunded">Refunded</option>
+          </select>
+          <select class="form-input" id="adminOrderPayment" style="width:auto;padding:.6rem" onchange="loadAdminOrders()">
+            <option value="">All Methods</option>
+            <option value="credit_card">Credit Card</option>
+            <option value="paypal">PayPal</option>
+            <option value="cash_on_delivery">Cash on Delivery</option>
+            <option value="mobile_money">Mobile Money</option>
+          </select>
+        </div>
+        <div id="adminOrdersList"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN USERS -->
+    <section id="pageAdminUsers" class="page">
+      <div class="page-header">
+        <div class="container"><h1>Users</h1></div>
+      </div>
+      <div class="container">
+        <div class="table-wrapper" id="adminUsersTable"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN MESSAGES -->
+    <section id="pageAdminMessages" class="page">
+      <div class="page-header">
+        <div class="container"><h1>Contact Messages</h1></div>
+      </div>
+      <div class="container">
+        <div id="adminMessagesList"></div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="pageProfile" class="page">
+      <div class="page-header">
+        <div class="container"><h1>Profile</h1></div>
+      </div>
+      <div class="container">
+        <div class="profile-card" id="profileCard"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- LOGIN MODAL -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Sign In</h2>
+        <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+      </div>
+      <form onsubmit="login(event)">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" class="form-input" id="loginUsername" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" class="form-input" id="loginPassword" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+        <div class="form-msg" id="loginMsg"></div>
+        <p class="form-footer">Don't have an account? <a href="#" onclick="closeModal('loginModal');showRegisterModal()">Register</a></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- REGISTER MODAL -->
+  <div class="modal-overlay" id="registerModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Create Account</h2>
+        <button class="modal-close" onclick="closeModal('registerModal')">&times;</button>
+      </div>
+      <form onsubmit="register(event)">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" class="form-input" id="regName" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" class="form-input" id="regEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" class="form-input" id="regUsername" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" class="form-input" id="regPassword" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+        <div class="form-msg" id="registerMsg"></div>
+        <p class="form-footer">Already have an account? <a href="#" onclick="closeModal('registerModal');showLoginModal()">Sign In</a></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- PRODUCT DETAIL MODAL -->
+  <div class="modal-overlay" id="productDetailModal">
+    <div class="modal modal-lg" id="productDetailContent"></div>
+  </div>
+
+  <!-- PRODUCT FORM MODAL -->
+  <div class="modal-overlay" id="productFormModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="productFormTitle">Add Product</h2>
+        <button class="modal-close" onclick="closeModal('productFormModal')">&times;</button>
+      </div>
+      <form onsubmit="saveProduct(event)">
+        <input type="hidden" id="pfId">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" class="form-input" id="pfName" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-input" id="pfDesc" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price ($)</label>
+            <input type="number" step="0.01" class="form-input" id="pfPrice" required>
+          </div>
+          <div class="form-group">
+            <label>Stock</label>
+            <input type="number" class="form-input" id="pfStock" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select class="form-input" id="pfCategory" required></select>
+        </div>
+        <div class="form-group">
+          <label>Image URL</label>
+          <div style="display:flex;gap:.5rem">
+            <input type="url" class="form-input" id="pfImage" placeholder="https://...">
+            <button type="button" class="btn btn-outline" style="white-space:nowrap;color:var(--text);border-color:var(--border)" onclick="uploadImage()">Upload</button>
+          </div>
+          <input type="file" id="pfImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" style="color:var(--text);border-color:var(--border)" onclick="closeModal('productFormModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+        <div class="form-msg" id="pfMsg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CATEGORY FORM MODAL -->
+  <div class="modal-overlay" id="categoryFormModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="categoryFormTitle">Add Category</h2>
+        <button class="modal-close" onclick="closeModal('categoryFormModal')">&times;</button>
+      </div>
+      <form onsubmit="saveCategory(event)">
+        <input type="hidden" id="cfId">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" class="form-input" id="cfName" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-input" id="cfDesc" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Icon (emoji or text)</label>
+          <input type="text" class="form-input" id="cfIcon" placeholder="e.g. 📱" maxlength="10">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" style="color:var(--text);border-color:var(--border)" onclick="closeModal('categoryFormModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+        <div class="form-msg" id="cfMsg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ORDER MODAL -->
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2>Place Order</h2>
+        <button class="modal-close" onclick="closeModal('orderModal')">&times;</button>
+      </div>
+      <div id="orderModalContent"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>ShopInventory</h3>
+        <p>Your trusted source for premium electronics and gadgets at honest prices.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Shop</h4>
+        <a href="#" onclick="navigate('shop')">All Products</a>
+        <a href="#" onclick="navigate('contact')">Contact</a>
+      </div>
+      <div class="footer-links">
+        <h4>Account</h4>
+        <a href="#" onclick="showLoginModal()">Sign In</a>
+        <a href="#" onclick="showRegisterModal()">Register</a>
+      </div>
+      <div class="footer-links">
+        <h4>Support</h4>
+        <a href="#" onclick="navigate('contact')">Help Center</a>
+        <a href="#" onclick="navigate('orders')">My Orders</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; 2026 ShopInventory. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
 </html>

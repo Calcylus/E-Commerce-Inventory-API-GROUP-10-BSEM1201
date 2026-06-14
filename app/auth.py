@@ -27,7 +27,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
 
 # OAuth2 scheme
 # tokenUrl must match our login endpoint
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 # Password hashing configuration

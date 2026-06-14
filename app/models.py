@@ -1,8 +1,6 @@
-from datetime import datetime
-from typing import List, Optional
-
-from sqlalchemy import DateTime, Float, ForeignKey, String, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from app.database import Base
 
@@ -10,127 +8,102 @@ from app.database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    full_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    email: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
-    username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[str] = mapped_column(String(20), default="customer")
-    is_active: Mapped[bool] = mapped_column(default=True)
+    id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, default="customer")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
-
-    # One user can have many orders
-    orders: Mapped[List["Order"]] = relationship(
-        back_populates="user"
-    )
+    orders = relationship("Order", back_populates="user")
 
 
 class Category(Base):
     __tablename__ = "categories"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    description = Column(String, nullable=True)
+    icon = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
-
-    # One category can have many products
-    products: Mapped[List["Product"]] = relationship(
-        back_populates="category"
-    )
+    products = relationship("Product", back_populates="category")
 
 
 class Product(Base):
     __tablename__ = "products"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    price: Mapped[float] = mapped_column(Float, nullable=False)
-    stock_quantity: Mapped[int] = mapped_column(default=0)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    description = Column(String, nullable=True)
+    price = Column(Float, nullable=False)
+    stock_quantity = Column(Integer, default=0)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    image_url = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    category_id: Mapped[int] = mapped_column(
-        ForeignKey("categories.id"),
-        nullable=False
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
-
-    # Many products belong to one category
-    category: Mapped["Category"] = relationship(
-        back_populates="products"
-    )
-
-    # One product can appear in many order items
-    order_items: Mapped[List["OrderItem"]] = relationship(
-        back_populates="product"
-    )
+    category = relationship("Category", back_populates="products")
+    order_items = relationship("OrderItem", back_populates="product")
 
 
 class Order(Base):
     __tablename__ = "orders"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    total_amount = Column(Float, nullable=False)
+    status = Column(String, default="pending")
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=False
-    )
+    payment_method = Column(String, default="cash_on_delivery")
+    payment_status = Column(String, default="pending")
 
-    total_amount: Mapped[float] = mapped_column(Float, default=0.0)
-    status: Mapped[str] = mapped_column(String(30), default="pending")
+    shipping_address = Column(Text, nullable=True)
+    city = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now()
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Many orders belong to one user
-    user: Mapped["User"] = relationship(
-        back_populates="orders"
-    )
-
-    # One order can have many order items
-    order_items: Mapped[List["OrderItem"]] = relationship(
-        back_populates="order"
-    )
+    user = relationship("User", back_populates="orders")
+    items = relationship("OrderItem", back_populates="order")
 
 
 class OrderItem(Base):
     __tablename__ = "order_items"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Float, nullable=False)
+    subtotal = Column(Float, nullable=False)
 
-    order_id: Mapped[int] = mapped_column(
-        ForeignKey("orders.id"),
-        nullable=False
-    )
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product", back_populates="order_items")
 
-    product_id: Mapped[int] = mapped_column(
-        ForeignKey("products.id"),
-        nullable=False
-    )
 
-    quantity: Mapped[int] = mapped_column(nullable=False)
-    unit_price: Mapped[float] = mapped_column(Float, nullable=False)
-    subtotal: Mapped[float] = mapped_column(Float, nullable=False)
+class ContactMessage(Base):
+    __tablename__ = "contact_messages"
 
-    # Many order items belong to one order
-    order: Mapped["Order"] = relationship(
-        back_populates="order_items"
-    )
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    subject = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Many order items refer to one product
-    product: Mapped["Product"] = relationship(
-        back_populates="order_items"
-    )
+
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rating = Column(Integer, nullable=False)
+    comment = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    product = relationship("Product", backref="reviews")
+    user = relationship("User", backref="reviews")

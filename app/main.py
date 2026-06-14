@@ -1,9 +1,12 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
 from app import models
-from app.routers import auth, users, categories, products, orders
+from app.routers import auth, users, categories, products, orders, contact, reviews, upload
 
 
 # Create database tables using SQLAlchemy models
@@ -21,12 +24,12 @@ app = FastAPI(
 )
 
 
-# Allow the React frontend to communicate with the FastAPI backend
+# Allow frontend to communicate with the backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -34,20 +37,22 @@ app.add_middleware(
 )
 
 
-# Register API routers
-app.include_router(auth.router)
-app.include_router(users.router)
-app.include_router(categories.router)
-app.include_router(products.router)
-app.include_router(orders.router)
+# Register API routers under /api prefix
+app.include_router(auth.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+app.include_router(categories.router, prefix="/api")
+app.include_router(products.router, prefix="/api")
+app.include_router(orders.router, prefix="/api")
+app.include_router(contact.router, prefix="/api")
+app.include_router(reviews.router, prefix="/api")
+app.include_router(upload.router, prefix="/api")
 
 
-@app.get("/")
-async def root():
-    return {
-        "message": "Welcome to the E-Commerce Inventory API",
-        "status": "running",
-        "docs": "/docs",
-        "redoc": "/redoc",
-        "frontend": "http://localhost:5173"
-    }
+# Serve frontend static files
+frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
+app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+
+# Serve uploaded files
+uploads_dir = os.path.join(os.path.dirname(__file__), "..", "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
